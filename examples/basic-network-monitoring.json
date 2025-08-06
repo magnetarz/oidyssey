@@ -1,0 +1,183 @@
+{
+  "name": "OIDyssey - Basic Network Monitoring",
+  "nodes": [
+    {
+      "parameters": {
+        "host": "192.168.1.1",
+        "resource": "deviceQuery",
+        "operation": "get",
+        "oid": "1.3.6.1.2.1.1.1.0"
+      },
+      "id": "snmp-system-info",
+      "name": "Get System Description",
+      "type": "snmp",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "credentials": {
+        "snmpCommunity": "public_v2c"
+      }
+    },
+    {
+      "parameters": {
+        "host": "192.168.1.1", 
+        "resource": "deviceQuery",
+        "operation": "walk",
+        "rootOid": "1.3.6.1.2.1.2.2.1.2",
+        "maxVarbinds": 20
+      },
+      "id": "snmp-interfaces",
+      "name": "Get Network Interfaces",
+      "type": "snmp", 
+      "typeVersion": 1,
+      "position": [260, 480],
+      "credentials": {
+        "snmpCommunity": "public_v2c"
+      }
+    },
+    {
+      "parameters": {
+        "oids": [
+          "1.3.6.1.2.1.1.3.0",
+          "1.3.6.1.2.1.1.5.0",
+          "1.3.6.1.2.1.1.6.0"
+        ],
+        "host": "192.168.1.1",
+        "resource": "bulkOperations", 
+        "operation": "bulkGet"
+      },
+      "id": "snmp-bulk-info",
+      "name": "Bulk Get Device Info",
+      "type": "snmp",
+      "typeVersion": 1,
+      "position": [260, 660],
+      "credentials": {
+        "snmpCommunity": "public_v2c"
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "schedule-trigger",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [40, 480],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"Get System Description\"].json[\"data\"][\"value\"]}}",
+              "operation": "contains",
+              "value2": "Linux"
+            }
+          ]
+        }
+      },
+      "id": "check-system-type",
+      "name": "Check if Linux System",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "insert",
+        "table": "network_devices",
+        "columns": [
+          "host",
+          "system_description", 
+          "uptime",
+          "system_name",
+          "location",
+          "timestamp"
+        ]
+      },
+      "id": "store-in-database",
+      "name": "Store Device Info",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [700, 480]
+    }
+  ],
+  "connections": {
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "Get System Description",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Network Interfaces", 
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Bulk Get Device Info",
+            "type": "main", 
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get System Description": {
+      "main": [
+        [
+          {
+            "node": "Check if Linux System",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Linux System": {
+      "main": [
+        [
+          {
+            "node": "Store Device Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Network Interfaces": {
+      "main": [
+        [
+          {
+            "node": "Store Device Info",
+            "type": "main", 
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bulk Get Device Info": {
+      "main": [
+        [
+          {
+            "node": "Store Device Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
