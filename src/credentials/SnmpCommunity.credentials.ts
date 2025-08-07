@@ -35,16 +35,16 @@ export class SnmpCommunity implements ICredentialType {
             options: [
                 {
                     name: 'v1',
-                    value: '1',
+                    value: 'v1',
                     description: 'SNMP version 1 (legacy, less secure)'
                 },
                 {
                     name: 'v2c',
-                    value: '2c',
+                    value: 'v2c',
                     description: 'SNMP version 2c (recommended for community-based auth)'
                 }
             ],
-            default: '2c',
+            default: 'v2c',
             required: true,
             description: 'SNMP protocol version to use. v2c is recommended for better error handling and Counter64 support.'
         },
@@ -132,7 +132,7 @@ export class SnmpCommunity implements ICredentialType {
     test: ICredentialTestRequest = {
         request: {
             method: 'GET' as const,
-            url: 'http://httpbin.org/status/200',
+            url: 'https://httpstat.us/200',
             timeout: 5000,
         },
         rules: [
@@ -140,10 +140,10 @@ export class SnmpCommunity implements ICredentialType {
                 type: 'responseSuccessBody',
                 properties: {
                     key: 'status',
-                    value: 'ok',
-                    message: 'SNMP credentials validated successfully',
-                },
-            },
+                    value: '200',
+                    message: 'Basic connectivity OK (note: SNMP cannot be validated via HTTP test)'
+                }
+            }
         ],
     };
 }

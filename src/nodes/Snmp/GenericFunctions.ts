@@ -23,6 +23,8 @@ import {
     SnmpObjectType,
     SnmpCredentials
 } from '../../types/SnmpTypes';
+import { SnmpCacheManager } from '../../utils/snmp/cacheManager';
+import { SnmpRateLimiter } from '../../utils/security/rateLimiter';
 
 import { InputValidator } from '../../utils/security/inputValidator';
 
@@ -62,19 +64,19 @@ function createSession(
         port: credentials.port || 161,
         retries: retries || 3,
         timeout: timeout || 5000,
-        version: (credentials.version === 'v3' ? snmp.Version3 : 
-                 credentials.version === 'v2c' ? snmp.Version2c : 
+        version: (normalizeVersion(credentials.version) === 'v3' ? snmp.Version3 : 
+                 normalizeVersion(credentials.version) === 'v2c' ? snmp.Version2c : 
                  snmp.Version1) as snmp.Version,
         idBitsSize: 32
     };
 
     // For v1/v2c, use community string
-    if (credentials.version !== 'v3' && credentials.community) {
+    if (normalizeVersion(credentials.version) !== 'v3' && credentials.community) {
         return snmp.createSession(host, credentials.community, options);
     }
 
     // For v3, add user and authentication
-    if (credentials.version === 'v3') {
+    if (normalizeVersion(credentials.version) === 'v3') {
         const v3Options = {
             ...options,
             user: credentials.username || '',
@@ -91,6 +93,17 @@ function createSession(
 }
 
 /**
+ * Normalize version between different sources (credentials UI vs internal)
+ */
+function normalizeVersion(version: string | undefined): 'v1' | 'v2c' | 'v3' {
+    if (!version) return 'v2c';
+    const v = String(version).toLowerCase();
+    if (v === '1' || v === 'v1') return 'v1';
+    if (v === '2' || v === '2c' || v === 'v2c') return 'v2c';
+    return 'v3';
+}
+
+/**
  * Perform SNMP GET operation
  */
 export async function snmpGet(
@@ -99,6 +112,29 @@ export async function snmpGet(
 ): Promise<SnmpResponse> {
     return new Promise((resolve, reject) => {
         try {
+            // Optional rate limiting per host
+            const rateLimiter = new SnmpRateLimiter();
+            const rate = rateLimiter.checkRateLimit(options.host);
+            if (!rate.allowed) {
+                throw new NodeOperationError(this.getNode(), rate.reason || 'Rate limit exceeded');
+            }
+
+            // Optional cache lookup
+            const cache = new SnmpCacheManager();
+            if (options.useCache) {
+                const cached = cache.getCachedValue(options.host, options.oid);
+                if (cached) {
+                    resolve({
+                        host: options.host,
+                        operation: 'get',
+                        timestamp: Date.now(),
+                        sessionId: `session-${Date.now()}`,
+                        varbinds: cached as ProcessedVarbind[],
+                        cached: true
+                    });
+                    return;
+                }
+            }
             // Validate inputs
             const hostValidation = InputValidator.validateHost(options.host);
             if (!hostValidation.valid) {
@@ -181,14 +217,20 @@ export async function snmpGet(
                     };
                 });
 
-                resolve({
+                const response: SnmpResponse = {
                     host: options.host,
                     operation: 'get',
                     timestamp: Date.now(),
                     sessionId: `session-${Date.now()}`,
                     varbinds: processedVarbinds,
                     cached: false
-                });
+                };
+
+                if (options.useCache) {
+                    cache.setCachedValue(options.host, options.oid, processedVarbinds);
+                }
+
+                resolve(response);
             });
 
         } catch (error) {
@@ -209,6 +251,12 @@ export async function snmpWalk(
 ): Promise<SnmpResponse> {
     return new Promise((resolve, reject) => {
         try {
+            // Optional rate limiting per host
+            const rateLimiter = new SnmpRateLimiter();
+            const rate = rateLimiter.checkRateLimit(options.host);
+            if (!rate.allowed) {
+                throw new NodeOperationError(this.getNode(), rate.reason || 'Rate limit exceeded');
+            }
             // Validate inputs
             const hostValidation = InputValidator.validateHost(options.host);
             if (!hostValidation.valid) {
@@ -305,7 +353,7 @@ export async function snmpWalk(
                 });
             };
 
-            if (credentials.version === 'v1') {
+            if (normalizeVersion(credentials.version) === 'v1') {
                 // Use walk for v1
                 session.walk(options.rootOid, maxOids, feedCb, doneCb);
             } else {
@@ -331,6 +379,12 @@ export async function snmpBulkGet(
 ): Promise<SnmpResponse> {
     return new Promise((resolve, reject) => {
         try {
+            // Optional rate limiting per host
+            const rateLimiter = new SnmpRateLimiter();
+            const rate = rateLimiter.checkRateLimit(options.host);
+            if (!rate.allowed) {
+                throw new NodeOperationError(this.getNode(), rate.reason || 'Rate limit exceeded');
+            }
             // Validate inputs
             const hostValidation = InputValidator.validateHost(options.host);
             if (!hostValidation.valid) {
@@ -361,7 +415,7 @@ export async function snmpBulkGet(
             } as SnmpCredentials;
 
             // For v1, fall back to regular GET
-            if (credentials.version === 'v1') {
+            if (normalizeVersion(credentials.version) === 'v1') {
                 // Create session and perform regular GET
                 const session = createSession(
                     options.host,
@@ -501,45 +555,34 @@ function generateTrapId(): string {
 }
 
 /**
- * Check if source IP is allowed
+ * Check if source IP is allowed (IPv4 CIDR aware)
  */
 function isSourceAllowed(sourceAddress: string, allowedSources: string[]): boolean {
-    if (!allowedSources || allowedSources.length === 0) {
-        return true; // Allow all if no restrictions
-    }
+    if (!allowedSources || allowedSources.length === 0) return true;
 
-    // Check for exact IP match or CIDR network match
-    for (const allowed of allowedSources) {
-        if (allowed.includes('/')) {
-            // CIDR notation - simplified check
-            const [network, prefixLength] = allowed.split('/');
-            const prefix = parseInt(prefixLength, 10);
-            
-            // Basic CIDR matching (simplified for demonstration)
-            const sourceOctets = sourceAddress.split('.').map(Number);
-            const networkOctets = network.split('.').map(Number);
-            
-            // Check if source is in the same network (simplified)
-            if (prefix >= 24) {
-                const samePrefixOctets = Math.floor(prefix / 8);
-                let matches = true;
-                for (let i = 0; i < samePrefixOctets; i++) {
-                    if (sourceOctets[i] !== networkOctets[i]) {
-                        matches = false;
-                        break;
-                    }
-                }
-                if (matches) return true;
-            } else {
-                // For simplicity, treat as exact match for smaller prefixes
-                if (sourceAddress === network) return true;
-            }
+    const ipToLong = (ip: string): number => {
+        const parts = ip.split('.').map(p => parseInt(p, 10));
+        if (parts.length !== 4 || parts.some(n => isNaN(n) || n < 0 || n > 255)) return -1;
+        return ((parts[0] << 24) >>> 0) + (parts[1] << 16) + (parts[2] << 8) + parts[3];
+    };
+
+    const src = ipToLong(sourceAddress);
+    if (src < 0) return false;
+
+    for (const rule of allowedSources) {
+        const trimmed = rule.trim();
+        if (!trimmed) continue;
+        if (trimmed.includes('/')) {
+            const [base, prefixStr] = trimmed.split('/');
+            const baseLong = ipToLong(base);
+            const prefix = parseInt(prefixStr, 10);
+            if (baseLong < 0 || isNaN(prefix) || prefix < 0 || prefix > 32) continue;
+            const mask = prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
+            if ((src & mask) === (baseLong & mask)) return true;
         } else {
-            // Exact IP match
-            if (sourceAddress === allowed) return true;
+            if (sourceAddress === trimmed) return true;
         }
     }
-    
     return false;
 }
 
@@ -665,7 +708,6 @@ export async function snmpTrapReceiver(
             }
 
             const receivedTraps: SnmpTrapData[] = [];
-            let timeoutId: NodeJS.Timeout;
             let server: dgram.Socket | null = null;
 
             // Create trap listener record
@@ -679,7 +721,7 @@ export async function snmpTrapReceiver(
             };
 
             // Setup timeout
-            timeoutId = setTimeout(() => {
+            const timeoutId = setTimeout(() => {
                 cleanup();
                 resolve(receivedTraps);
             }, timeout);
@@ -803,7 +845,7 @@ export function getActiveTrapListeners(): Map<number, TrapListener> {
  */
 export async function cleanupSnmpResources(): Promise<void> {
     // Clean up all active trap listeners
-    for (const [_port, listener] of activeTrapListeners) {
+    for (const [, listener] of activeTrapListeners) {
         try {
             if (listener.server) {
                 listener.server.close();

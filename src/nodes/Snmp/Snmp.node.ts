@@ -125,6 +125,8 @@ async function executeDeviceQuery(this: IExecuteFunctions, itemIndex: number): P
     // Merge credentials with node parameters
     const fullCredentials: SnmpCredentials = {
         ...credentials,
+        // normalize version into canonical 'v1' | 'v2c' | 'v3'
+        version: credentials.version,
         port,
         timeout: additionalOptions.timeout || credentials.timeout || 5000,
         retries: additionalOptions.retries || credentials.retries || 3
@@ -265,21 +267,86 @@ async function executeBulkGetOperation(
  */
 async function executeBulkOperations(this: IExecuteFunctions, itemIndex: number): Promise<any[]> {
     const bulkOperation = this.getNodeParameter('bulkOperation', itemIndex) as string;
-    
-    // Simplified implementation for TypeScript validation
-    // Full implementation would be added here
+    const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as any;
+
+    const responses: any[] = [];
+
     switch (bulkOperation) {
-        case 'multiDevice':
-        case 'multiOid':
-        case 'template':
-            return [{
-                json: {
-                    operation: bulkOperation,
-                    status: 'completed',
-                    timestamp: Date.now()
+        case 'multiDevice': {
+            const hostsCollection = this.getNodeParameter('hosts', itemIndex, { hostList: [] }) as any;
+            const hostList: string[] = (hostsCollection.hostList || []).map((h: any) => h.host).filter((h: string) => h);
+            const operation = this.getNodeParameter('operation', itemIndex) as string;
+            const credentials = await this.getCredentials('snmpCommunity', itemIndex) as SnmpCredentials;
+            const port = this.getNodeParameter('port', itemIndex, 161) as number;
+
+            const fullCreds: SnmpCredentials = {
+                ...credentials,
+                version: credentials.version,
+                port,
+                timeout: additionalOptions.timeout || credentials.timeout || 5000,
+                retries: additionalOptions.retries || credentials.retries || 3
+            };
+
+            for (const host of hostList) {
+                if (operation === 'get') {
+                    const oid = this.getNodeParameter('oid', itemIndex) as string;
+                    const resp = await snmpGet.call(this, { host, oid, credentials: fullCreds, useCache: additionalOptions.useCache });
+                    responses.push({ json: { host, operation: 'get', data: resp.varbinds, summary: { count: resp.varbinds.length } } });
+                } else if (operation === 'walk') {
+                    const rootOid = this.getNodeParameter('rootOid', itemIndex) as string;
+                    const resp = await snmpWalk.call(this, { host, rootOid, credentials: fullCreds, maxVarbinds: additionalOptions.maxVarbinds });
+                    responses.push({ json: { host, operation: 'walk', data: resp.varbinds, summary: { count: resp.varbinds.length } } });
+                } else if (operation === 'bulkGet') {
+                    const oidsCollection = this.getNodeParameter('oids', itemIndex) as { oidList: Array<{ oid: string }> };
+                    const oids = oidsCollection.oidList.map(item => item.oid);
+                    const resp = await snmpBulkGet.call(this, { host, oids, credentials: fullCreds, maxRepetitions: additionalOptions.maxRepetitions });
+                    responses.push({ json: { host, operation: 'bulkGet', data: resp.varbinds, summary: { count: resp.varbinds.length } } });
+                } else {
+                    throw new NodeOperationError(this.getNode(), `Unsupported operation for multiDevice: ${operation}`);
                 }
-            }];
-        
+            }
+            return responses;
+        }
+
+        case 'multiOid': {
+            const host = this.getNodeParameter('host', itemIndex) as string;
+            const oidsCollection = this.getNodeParameter('oids', itemIndex) as { oidList: Array<{ oid: string }> };
+            const oids = oidsCollection.oidList.map(item => item.oid);
+            const credentials = await this.getCredentials('snmpCommunity', itemIndex) as SnmpCredentials;
+            const port = this.getNodeParameter('port', itemIndex, 161) as number;
+            const fullCreds: SnmpCredentials = {
+                ...credentials,
+                version: credentials.version,
+                port,
+                timeout: additionalOptions.timeout || credentials.timeout || 5000,
+                retries: additionalOptions.retries || credentials.retries || 3
+            };
+            const resp = await snmpBulkGet.call(this, { host, oids, credentials: fullCreds, maxRepetitions: additionalOptions.maxRepetitions });
+            responses.push({ json: { host, operation: 'bulkGet', data: resp.varbinds, summary: { count: resp.varbinds.length } } });
+            return responses;
+        }
+
+        case 'template': {
+            const template = this.getNodeParameter('template', itemIndex) as string;
+            const host = this.getNodeParameter('host', itemIndex) as string;
+            const credentials = await this.getCredentials('snmpCommunity', itemIndex) as SnmpCredentials;
+            const port = this.getNodeParameter('port', itemIndex, 161) as number;
+            const fullCreds: SnmpCredentials = {
+                ...credentials,
+                version: credentials.version,
+                port,
+                timeout: additionalOptions.timeout || credentials.timeout || 5000,
+                retries: additionalOptions.retries || credentials.retries || 3
+            };
+            const { getOidTemplates } = await import('./SnmpDescription');
+            const templates = getOidTemplates();
+            const selected = (templates as any)[template] as Array<{ oid: string; name: string }>; 
+            const oids = (selected || []).map(t => t.oid);
+            const resp = await snmpBulkGet.call(this, { host, oids, credentials: fullCreds, maxRepetitions: additionalOptions.maxRepetitions });
+            responses.push({ json: { host, operation: 'template', template, data: resp.varbinds, summary: { count: resp.varbinds.length } } });
+            return responses;
+        }
+
         default:
             throw new NodeOperationError(
                 this.getNode(),

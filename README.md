@@ -1,6 +1,5 @@
 # 🚀 OIDyssey
 
-[![npm version](https://badge.fury.io/js/oidyssey.svg)](https://badge.fury.io/js/oidyssey)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Your Journey Through SNMP Networks Made Simple**
@@ -13,6 +12,7 @@ OIDyssey is a comprehensive n8n community node for SNMP (Simple Network Manageme
 
 - **🌐 Full SNMP Protocol Support**: v1, v2c, and v3 with authentication and privacy
 - **⚡ Multiple Operations**: GET, WALK, BULK-GET operations for all your network discovery needs
+- **📡 Trap Receiver**: Listen for and process SNMP traps from network devices (uses a proper decoder roadmap; current implementation uses UDP listener with filtering and simplified parsing)
 - **🔒 Security First**: Built-in input validation, SSRF protection, and credential hygiene
 - **🚀 Performance Optimized**: Caching, connection pooling, and intelligent rate limiting
 - **💪 Production Ready**: Comprehensive error handling, retry logic, and timeout management
@@ -20,17 +20,28 @@ OIDyssey is a comprehensive n8n community node for SNMP (Simple Network Manageme
 
 ## 🎯 Installation
 
-Install OIDyssey in your n8n instance:
+### As a Custom Node (Current Method)
+
+Install OIDyssey as a custom node in your n8n instance:
 
 ```bash
-# In n8n root directory
-npm install oidyssey
+# Navigate to your n8n custom nodes directory
+cd ~/.n8n/custom
 
-# Or install globally
-npm install -g oidyssey
+# Clone the repository
+git clone https://github.com/magnetarz/oidyssey.git
+
+# Navigate to the OIDyssey directory
+cd oidyssey
+
+# Install dependencies
+npm install
+
+# Build the node
+npm run build
 ```
 
-Restart n8n to begin your OIDyssey!
+Restart n8n to load the OIDyssey node!
 
 ## 📋 Prerequisites
 
@@ -67,21 +78,24 @@ Privacy Key: Your privacy/encryption key
 
 ## 🗺️ Your OIDyssey Journey
 
-OIDyssey provides three main expedition types:
+OIDyssey provides two powerful exploration modes:
 
-### 🎯 Device Query Expeditions
+### 🎯 Device Query Operations (SNMP Node)
 - **GET Operation**: Retrieve single OID treasures
 - **WALK Operation**: Explore entire OID territories from a root location
-
-### ⚡ Bulk Operations
 - **BULK-GET**: Efficiently collect multiple OID artifacts in one expedition
 
-### 📡 Trap Receiver Station
-- **Listen Mode**: Receive SNMP trap signals from network devices across your domain
+### 📡 Trap Receiver Trigger (SNMP Trap Trigger Node)
+- **Continuous Listening**: Automatically triggers workflows when SNMP traps are received
+- **Real-time Processing**: Immediate response to network events and alerts
+- **Flexible Filtering**: Filter by source IP, community string, or OID patterns
+- **Webhook-like Behavior**: Works like a webhook but for SNMP traps on UDP port 162
 
 ## 📖 Navigation Examples
 
-### 🏠 Basic System Information Discovery
+### 🎯 SNMP Node Operations
+
+#### 🏠 Basic System Information Discovery
 ```json
 {
   "host": "192.168.1.1",
@@ -90,7 +104,7 @@ OIDyssey provides three main expedition types:
 }
 ```
 
-### 🌊 Network Interface Exploration
+#### 🌊 Network Interface Exploration
 ```json
 {
   "host": "switch.mydomain.com", 
@@ -99,7 +113,7 @@ OIDyssey provides three main expedition types:
 }
 ```
 
-### 📦 Multiple OID Treasure Hunt
+#### 📦 Multiple OID Treasure Hunt
 ```json
 {
   "host": "server.example.com",
@@ -108,6 +122,34 @@ OIDyssey provides three main expedition types:
     "1.3.6.1.2.1.1.3.0", 
     "1.3.6.1.2.1.1.5.0"
   ]
+}
+```
+
+### 📡 SNMP Trap Trigger Configuration
+
+#### 🔧 Basic Trap Listener Setup
+```json
+{
+  "port": 162,
+  "bindAddress": "0.0.0.0",
+  "options": {
+    "allowedSources": "192.168.1.0/24,10.0.0.0/8",
+    "filterCommunity": "public",
+    "includeRawPdu": true
+  }
+}
+```
+
+#### 🎯 Filtered Trap Reception
+```json
+{
+  "port": 1162,
+  "bindAddress": "127.0.0.1",
+  "options": {
+    "allowedSources": "192.168.1.100,192.168.1.101", 
+    "filterOid": "1.3.6.1.4.1.2021",
+    "filterCommunity": "monitoring"
+  }
 }
 ```
 
@@ -156,14 +198,13 @@ npm run dev
 
 ### 🐳 Testing with Docker
 
-A test SNMP agent is included for your practice expeditions:
+For testing SNMP operations, you can run a test SNMP agent:
 
 ```bash
-# Start your practice target
+# Start a test SNMP target
 docker run -d --name snmp-practice -p 161:161/udp polinux/snmpd
 
-# Test your connection
-npm run test:integration
+# The node can then connect to localhost:161 for testing
 ```
 
 ### 🏛️ Project Architecture
@@ -180,21 +221,23 @@ oidyssey/
 └── docs/                   # Detailed maps and guides
 ```
 
-## 🧪 Testing Your Equipment
+## 🧪 Building and Development
 
 ```bash
-# Unit tests (test your tools)
-npm test
+# Build the TypeScript files
+npm run build
 
-# Integration tests (full expedition simulation)
-npm run test:integration
-
-# Coverage report (equipment reliability check)
-npm run test:coverage
+# Watch mode for development
+npm run dev
 
 # Code quality check
 npm run lint
+
+# Format code
+npm run format
 ```
+
+> Note: A formal test suite is in progress. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for details.
 
 ## 📚 Expedition Guide (API Reference)
 
