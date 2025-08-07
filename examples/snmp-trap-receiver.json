@@ -1,0 +1,185 @@
+{
+  "name": "SNMP Trap Receiver Example",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "trapReceiver",
+        "trapOptions": {
+          "port": 162,
+          "timeout": 60,
+          "allowedSources": {
+            "sourceList": [
+              {
+                "source": "192.168.1.0/24"
+              },
+              {
+                "source": "10.0.0.0/8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "b6f0da66-d0a4-4db9-8f0a-7c5a85c7f0f8",
+      "name": "SNMP Trap Listener",
+      "type": "oidyssey.snmp",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "7e8b1e8a-9c7d-4f6e-8a5b-2d9e1c8f7a6b",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "received",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "c3d9e8f2-a1b2-4c5d-8e9f-3a7b9c1d5e6f",
+      "name": "Check if Trap Received",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "🚨 **SNMP Trap Alert!** 🚨\n\n**Source:** {{ $json.source.address }}:{{ $json.source.port }}\n**Trap Type:** {{ $json.pdu.type }}\n**SNMP Version:** {{ $json.summary.version }}\n**Enterprise OID:** {{ $json.pdu.enterprise }}\n**Trap OID:** {{ $json.pdu.genericTrap }}.{{ $json.pdu.specificTrap }}\n**Agent Address:** {{ $json.pdu.agentAddr }}\n**Uptime:** {{ $json.pdu.uptime }}\n**Timestamp:** {{ $json.timestamp }}\n\n**Varbinds:**\n{{ $json.varbinds.map(vb => `- ${vb.oid}: ${vb.value} (${vb.type})`).join('\\n') }}",
+        "options": {}
+      },
+      "id": "d4e5f6a7-b8c9-4d0e-8f1a-5b6c7d8e9f0a",
+      "name": "Format Trap Alert",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 2,
+      "position": [
+        900,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "{\n  \"text\": \"SNMP Trap Received\",\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*SNMP Trap Alert* 🚨\\n\\n*Source:* {{ $json.source.address }}:{{ $json.source.port }}\\n*Type:* {{ $json.pdu.type }}\\n*Version:* {{ $json.summary.version }}\\n*Enterprise:* {{ $json.pdu.enterprise }}\\n*Agent:* {{ $json.pdu.agentAddr }}\\n*Uptime:* {{ $json.pdu.uptime }}\\n*Timestamp:* {{ $json.timestamp }}\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Varbinds:*\\n{{ $json.varbinds.map(vb => `• ${vb.oid}: ${vb.value} (${vb.type})`).join('\\n') }}\"\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "e5f6a7b8-c9d0-4e1f-8a2b-6c7d8e9f0a1b",
+      "name": "Send to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "content": "⏰ **SNMP Trap Listener Timeout**\n\nNo SNMP traps were received during the {{ $json.summary.timeout }} second listening period.\n\n**Configuration:**\n- Port: {{ $json.port }}\n- Allowed Sources: {{ $json.summary.allowedSources }} networks\n- Status: {{ $json.status }}",
+        "options": {}
+      },
+      "id": "f6a7b8c9-d0e1-4f2a-9b3c-7d8e9f0a1b2c",
+      "name": "Format Timeout Message",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 2,
+      "position": [
+        900,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "log",
+        "message": "SNMP Trap Listener timed out - no traps received"
+      },
+      "id": "a7b8c9d0-e1f2-4a3b-9c4d-8e9f0a1b2c3d",
+      "name": "Log Timeout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        360
+      ]
+    }
+  ],
+  "connections": {
+    "SNMP Trap Listener": {
+      "main": [
+        [
+          {
+            "node": "Check if Trap Received",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Trap Received": {
+      "main": [
+        [
+          {
+            "node": "Format Trap Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Timeout Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Trap Alert": {
+      "main": [
+        [
+          {
+            "node": "Send to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Timeout Message": {
+      "main": [
+        [
+          {
+            "node": "Log Timeout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-12-31T12:00:00.000Z",
+  "versionId": "12345"
+}

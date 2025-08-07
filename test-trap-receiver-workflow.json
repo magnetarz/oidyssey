@@ -1,0 +1,46 @@
+{
+  "name": "SNMP Trap Receiver Test",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "trapReceiver",
+        "trapOptions": {
+          "port": 1162,
+          "timeout": 30
+        }
+      },
+      "id": "snmp-trap-listener",
+      "name": "SNMP Trap Listener",
+      "type": "n8n-nodes-snmp.snmp",
+      "typeVersion": 1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log all received data\nconsole.log('=== SNMP Trap Receiver Output ===');\nconsole.log(JSON.stringify(items, null, 2));\n\n// Return the items for further processing\nreturn items;"
+      },
+      "id": "debug-output",
+      "name": "Debug Output",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [660, 300]
+    }
+  ],
+  "connections": {
+    "SNMP Trap Listener": {
+      "main": [[{
+        "node": "Debug Output",
+        "type": "main",
+        "index": 0
+      }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-12-31T12:00:00.000Z"
+}

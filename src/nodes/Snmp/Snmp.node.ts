@@ -14,11 +14,13 @@ import {
 } from 'n8n-workflow';
 
 import { snmpNodeDescription } from './SnmpDescription';
-import { snmpGet, snmpWalk, snmpBulkGet } from './GenericFunctions';
+import { snmpGet, snmpWalk, snmpBulkGet, snmpTrapReceiver } from './GenericFunctions';
 import { 
     SnmpGetOptions, 
     SnmpWalkOptions, 
     SnmpBulkGetOptions,
+    SnmpTrapListenerOptions,
+    SnmpTrapData,
     SnmpCredentials,
 } from '../../types/SnmpTypes';
 
@@ -71,10 +73,8 @@ export class Snmp implements INodeType {
                         break;
                     
                     case 'trapReceiver':
-                        throw new NodeOperationError(
-                            this.getNode(),
-                            'SNMP trap receiver is not yet implemented. This feature is planned for future release.'
-                        );
+                        responseData = await executeTrapReceiver.call(this, itemIndex);
+                        break;
                     
                     default:
                         throw new NodeOperationError(
@@ -285,5 +285,117 @@ async function executeBulkOperations(this: IExecuteFunctions, itemIndex: number)
                 this.getNode(),
                 `Unknown bulk operation: ${bulkOperation}`
             );
+    }
+}
+
+/**
+ * Execute SNMP trap receiver
+ */
+async function executeTrapReceiver(this: IExecuteFunctions, itemIndex: number): Promise<any[]> {
+    const trapOptions = this.getNodeParameter('trapOptions', itemIndex, {}) as any;
+    
+    // Extract trap listener options
+    const options: SnmpTrapListenerOptions = {
+        port: trapOptions.port || 162,
+        timeout: trapOptions.timeout || 30,
+        allowedSources: [],
+        bindAddress: '0.0.0.0'
+    };
+
+    // Process allowed sources if specified
+    if (trapOptions.allowedSources?.sourceList && Array.isArray(trapOptions.allowedSources.sourceList)) {
+        options.allowedSources = trapOptions.allowedSources.sourceList
+            .map((item: any) => item.source)
+            .filter((source: string) => source && source.trim());
+    }
+
+    try {
+        // Start trap receiver and wait for traps
+        const receivedTraps: SnmpTrapData[] = await snmpTrapReceiver.call(this, options);
+        
+        // Format response data
+        const responseData: any[] = [];
+        
+        if (receivedTraps.length === 0) {
+            // No traps received within timeout
+            responseData.push({
+                json: {
+                    operation: 'trapReceiver',
+                    status: 'timeout',
+                    message: `No SNMP traps received within ${options.timeout} seconds`,
+                    port: options.port,
+                    timestamp: Date.now(),
+                    summary: {
+                        trapsReceived: 0,
+                        timeout: options.timeout,
+                        allowedSources: options.allowedSources?.length || 0
+                    }
+                }
+            });
+        } else {
+            // Process received traps
+            for (const trap of receivedTraps) {
+                responseData.push({
+                    json: {
+                        operation: 'trapReceiver',
+                        status: 'received',
+                        trapId: trap.trapId,
+                        source: trap.source,
+                        receivedAt: trap.receivedAt,
+                        timestamp: new Date(trap.receivedAt).toISOString(),
+                        pdu: {
+                            type: trap.pdu.type,
+                            version: trap.pdu.version,
+                            community: trap.pdu.community,
+                            enterprise: trap.pdu.enterprise,
+                            agentAddr: trap.pdu.agentAddr,
+                            genericTrap: trap.pdu.genericTrap,
+                            specificTrap: trap.pdu.specificTrap,
+                            uptime: trap.pdu.uptime,
+                            timestamp: trap.pdu.timestamp
+                        },
+                        varbinds: trap.pdu.varbinds,
+                        summary: {
+                            varbindCount: trap.pdu.varbinds.length,
+                            sourceAddress: trap.source.address,
+                            sourcePort: trap.source.port,
+                            trapType: trap.pdu.type,
+                            version: `v${trap.pdu.version === 0 ? '1' : trap.pdu.version === 1 ? '2c' : '3'}`
+                        }
+                    }
+                });
+            }
+            
+            // Add summary if multiple traps received
+            if (receivedTraps.length > 1) {
+                responseData.push({
+                    json: {
+                        operation: 'trapReceiver',
+                        status: 'summary',
+                        message: `Received ${receivedTraps.length} SNMP traps`,
+                        port: options.port,
+                        timeout: options.timeout,
+                        timestamp: Date.now(),
+                        summary: {
+                            totalTraps: receivedTraps.length,
+                            uniqueSources: [...new Set(receivedTraps.map(t => t.source.address))].length,
+                            trapTypes: [...new Set(receivedTraps.map(t => t.pdu.type))],
+                            timespan: {
+                                first: Math.min(...receivedTraps.map(t => t.receivedAt)),
+                                last: Math.max(...receivedTraps.map(t => t.receivedAt))
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        return responseData;
+
+    } catch (error) {
+        throw new NodeOperationError(
+            this.getNode(),
+            `SNMP trap receiver failed: ${String(error)}`
+        );
     }
 }

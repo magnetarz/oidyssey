@@ -80,6 +80,8 @@ export interface SnmpResponse {
 
 export type SnmpOperation = 'get' | 'walk' | 'bulkGet' | 'set' | 'trapListen';
 
+export type TrapType = 'v1' | 'v2c' | 'v3' | 'inform';
+
 export interface SnmpGetOptions {
     host: string;
     oid: string;
@@ -114,6 +116,38 @@ export interface SnmpTrapListenerOptions {
     port?: number;
     allowedSources?: string[];
     timeout?: number;
+    credentials?: SnmpCredentials;
+    bindAddress?: string;
+}
+
+export interface SnmpTrapData {
+    source: {
+        address: string;
+        port: number;
+    };
+    pdu: {
+        type: string;
+        version: number;
+        community?: string;
+        enterprise?: string;
+        agentAddr?: string;
+        genericTrap?: number;
+        specificTrap?: number;
+        timestamp?: number;
+        uptime?: number;
+        varbinds: ProcessedVarbind[];
+    };
+    receivedAt: number;
+    trapId: string;
+}
+
+export interface TrapListener {
+    port: number;
+    server: any;
+    isListening: boolean;
+    allowedSources: string[];
+    createdAt: number;
+    trapCount: number;
 }
 
 export interface SnmpError {

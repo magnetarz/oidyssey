@@ -138,7 +138,7 @@ OIDyssey provides three main expedition types:
 
 ```bash
 # Clone your OIDyssey
-git clone https://github.com/yourusername/oidyssey.git
+git clone https://github.com/magnetarz/oidyssey.git
 cd oidyssey
 
 # Prepare your expedition tools
@@ -283,8 +283,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Expedition Support
 
-- 🐛 **Report Issues**: [GitHub Issues](https://github.com/yourusername/oidyssey/issues)
-- 💬 **Community Discussions**: [GitHub Discussions](https://github.com/yourusername/oidyssey/discussions)
+- 🐛 **Report Issues**: [GitHub Issues](https://github.com/magnetarz/oidyssey/issues)
+- 💬 **Community Discussions**: [GitHub Discussions](https://github.com/magnetarz/oidyssey/discussions)
 - 📧 **Direct Contact**: Send a message to our expedition leaders
 
 ---
