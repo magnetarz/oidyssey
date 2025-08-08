@@ -24,7 +24,8 @@
       "dist/credentials/SnmpCommunity.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/Snmp/Snmp.node.js"
+      "dist/nodes/Snmp/Snmp.node.js",
+      "dist/nodes/SnmpTrapTrigger/SnmpTrapTrigger.node.js"
     ]
   },
   "scripts": {

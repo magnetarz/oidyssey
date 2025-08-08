@@ -1,0 +1,80 @@
+{
+  "name": "SNMP Trap Trigger Example",
+  "nodes": [
+    {
+      "parameters": {
+        "port": 162,
+        "bindAddress": "0.0.0.0",
+        "options": {
+          "allowedSources": "",
+          "filterOid": "",
+          "filterCommunity": "",
+          "includeRawPdu": false,
+          "validateSource": true
+        }
+      },
+      "id": "b4a1c5f0-1234-4567-8901-123456789abc",
+      "name": "SNMP Trap Trigger",
+      "type": "snmpTrapTrigger",
+      "typeVersion": 1,
+      "position": [280, 300],
+      "webhookId": ""
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process received SNMP trap\nconst trapData = $input.first().json;\n\n// Extract key information\nconst sourceIP = trapData.source.address;\nconst trapType = trapData.pdu.type;\nconst timestamp = trapData.timestamp;\nconst community = trapData.trap.community;\nconst varbindCount = trapData.summary.varbindCount;\n\n// Create formatted output\nreturn {\n  json: {\n    alert: {\n      severity: \"INFO\",\n      title: `SNMP Trap Received from ${sourceIP}`,\n      description: `Received ${trapType} trap with ${varbindCount} varbinds`,\n      timestamp: timestamp,\n      source: sourceIP,\n      community: community,\n      trapDetails: trapData\n    }\n  }\n};"
+      },
+      "id": "c5b2d6f1-2345-5678-9012-234567890bcd",
+      "name": "Process Trap Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "content": "🚨 **SNMP Trap Alert**\\n\\n**Source:** {{$json.alert.source}}\\n**Type:** {{$json.alert.title}}\\n**Description:** {{$json.alert.description}}\\n**Community:** {{$json.alert.community}}\\n**Time:** {{$json.alert.timestamp}}\\n\\n**Raw Trap Data:**\\n```json\\n{{JSON.stringify($json.alert.trapDetails, null, 2)}}\\n```",
+        "options": {}
+      },
+      "id": "d6c3e7f2-3456-6789-0123-345678901cde",
+      "name": "Log Trap Alert",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "SNMP Trap Trigger": {
+      "main": [
+        [
+          {
+            "node": "Process Trap Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Trap Data": {
+      "main": [
+        [
+          {
+            "node": "Log Trap Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1234567890abcdef1234567890abcdef12345678"
+  },
+  "id": "1",
+  "tags": []
+}
