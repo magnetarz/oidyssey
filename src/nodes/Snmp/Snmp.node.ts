@@ -28,7 +28,7 @@ export class Snmp implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'SNMP',
         name: 'snmp',
-        icon: 'file:snmp-512.png',
+        icon: 'file:snmp.svg',
         group: ['network'],
         version: 1,
         subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
