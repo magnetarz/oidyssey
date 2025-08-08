@@ -36,9 +36,9 @@
 ## ❌ Not Yet Implemented
 
 ### Testing
-- ❌ **Unit Tests** - No test files created yet
+- ✅ **Unit Tests (initial)** - Added tests for InputValidator, CredentialUtils, SnmpCacheManager, SnmpRateLimiter
 - ❌ **Integration Tests** - No integration test suite
-- ❌ **Test Coverage** - No coverage reports
+- ⚠️ **Test Coverage** - Enabled via Jest config; expand tests to increase coverage
 
 ### Documentation
 - ❌ **API Documentation** - Need to generate from TypeScript
@@ -64,7 +64,7 @@
 | Security Features | ✅ Implemented | 100% |
 | Performance Features | ✅ Implemented | 100% |
 | n8n Integration | ✅ Implemented | 100% |
-| Testing | ❌ Not Implemented | 0% |
+| Testing | ⚠️ Partial | 25% |
 | Documentation | ⚠️ Partial | 60% |
 | Build & Distribution | ⚠️ Partial | 40% |
 
@@ -90,7 +90,7 @@ oidyssey/
 │       ├── security/       ✅ All security utilities
 │       └── snmp/           ✅ All SNMP utilities
 ├── dist/                   ✅ Built files present (both nodes)
-├── test/                   ❌ Empty directory
+├── test/                   ⚠️ Initial unit tests present
 ├── examples/               ✅ Example workflows + new trap trigger example
 ├── docs/                   ✅ Documentation present
 ├── package.json            ✅ Configured (both nodes registered)

@@ -19,7 +19,7 @@ export class SnmpTrapTrigger implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'SNMP Trap Trigger',
         name: 'snmpTrapTrigger',
-        icon: 'file:snmp-256.png',
+        icon: 'file:snmp-512.png',
         group: ['trigger'],
         version: 1,
         description: 'Listens for SNMP traps and triggers workflow execution',
