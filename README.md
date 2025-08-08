@@ -4,19 +4,27 @@
 
 **Your Journey Through SNMP Networks Made Simple**
 
-OIDyssey is a comprehensive n8n community node for SNMP (Simple Network Management Protocol) operations. Embark on your journey to monitor and interact with network devices, servers, and infrastructure components using SNMP v1, v2c, and v3 protocols.
+OIDyssey is a comprehensive n8n community node package providing two powerful nodes for SNMP (Simple Network Management Protocol) operations. Embark on your journey to monitor and interact with network devices, servers, and infrastructure components using SNMP v1, v2c, and v3 protocols.
 
-![OIDyssey Logo](src/OIDyssey.png)
+![OIDyssey Logo](src/snmp.svg)
 
 ## ✨ Features
 
+### 🎯 Dual-Node Architecture
+OIDyssey provides **two specialized nodes** for complete SNMP functionality:
+
+1. **SNMP Node** - For active network queries and operations
+2. **SNMP Trap Trigger Node** - For passive trap reception (webhook-like behavior)
+
+### Core Capabilities
 - **🌐 Full SNMP Protocol Support**: v1, v2c, and v3 with authentication and privacy
 - **⚡ Multiple Operations**: GET, WALK, BULK-GET operations for all your network discovery needs
-- **📡 Trap Receiver**: Listen for and process SNMP traps from network devices (uses a proper decoder roadmap; current implementation uses UDP listener with filtering and simplified parsing)
-- **🔒 Security First**: Built-in input validation, SSRF protection, and credential hygiene
+- **📡 Real-time Trap Reception**: Continuous listening for SNMP traps with advanced filtering
+- **🔒 Security First**: Built-in input validation, CIDR-based IP filtering, SSRF protection, and credential hygiene
 - **🚀 Performance Optimized**: Caching, connection pooling, and intelligent rate limiting
 - **💪 Production Ready**: Comprehensive error handling, retry logic, and timeout management
 - **📝 TypeScript**: Fully typed with comprehensive type definitions for better development experience
+- **🎨 Modern UI**: SVG icons for crisp display at any resolution
 
 ## 🎯 Installation
 
@@ -78,18 +86,26 @@ Privacy Key: Your privacy/encryption key
 
 ## 🗺️ Your OIDyssey Journey
 
-OIDyssey provides two powerful exploration modes:
+OIDyssey provides two powerful nodes for complete SNMP network management:
 
-### 🎯 Device Query Operations (SNMP Node)
-- **GET Operation**: Retrieve single OID treasures
-- **WALK Operation**: Explore entire OID territories from a root location
-- **BULK-GET**: Efficiently collect multiple OID artifacts in one expedition
+### 🎯 SNMP Node - Active Network Operations
+Perfect for scheduled monitoring, on-demand queries, and bulk data collection:
+- **GET Operation**: Retrieve single OID values
+- **WALK Operation**: Explore entire OID trees from a starting point
+- **BULK-GET**: Efficiently collect multiple OIDs in one request
+- **Multi-Device Support**: Query multiple devices in a single workflow
+- **Template Support**: Use pre-defined OID templates for common metrics
 
-### 📡 Trap Receiver Trigger (SNMP Trap Trigger Node)
+### 📡 SNMP Trap Trigger Node - Passive Event Reception
+Works like a webhook but for SNMP traps - perfect for real-time alerts and events:
 - **Continuous Listening**: Automatically triggers workflows when SNMP traps are received
 - **Real-time Processing**: Immediate response to network events and alerts
-- **Flexible Filtering**: Filter by source IP, community string, or OID patterns
-- **Webhook-like Behavior**: Works like a webhook but for SNMP traps on UDP port 162
+- **Advanced Filtering**: 
+  - **CIDR-based IP filtering** (e.g., `192.168.1.0/24`, `10.0.0.0/8`)
+  - **Community string filtering**
+  - **OID pattern matching**
+- **Webhook-like Behavior**: Start workflows based on network events
+- **Configurable Port**: Default 162 or custom port for non-privileged operation
 
 ## 📖 Navigation Examples
 
@@ -127,7 +143,7 @@ OIDyssey provides two powerful exploration modes:
 
 ### 📡 SNMP Trap Trigger Configuration
 
-#### 🔧 Basic Trap Listener Setup
+#### 🔧 Basic Trap Listener Setup with CIDR Filtering
 ```json
 {
   "port": 162,
@@ -135,20 +151,35 @@ OIDyssey provides two powerful exploration modes:
   "options": {
     "allowedSources": "192.168.1.0/24,10.0.0.0/8",
     "filterCommunity": "public",
-    "includeRawPdu": true
+    "includeRawPdu": true,
+    "validateSource": true
   }
 }
 ```
 
-#### 🎯 Filtered Trap Reception
+#### 🎯 Advanced Filtered Trap Reception
 ```json
 {
   "port": 1162,
-  "bindAddress": "127.0.0.1",
+  "bindAddress": "0.0.0.0",
   "options": {
-    "allowedSources": "192.168.1.100,192.168.1.101", 
+    "allowedSources": "192.168.1.100,192.168.1.101,172.16.0.0/12", 
     "filterOid": "1.3.6.1.4.1.2021",
-    "filterCommunity": "monitoring"
+    "filterCommunity": "monitoring",
+    "includeRawPdu": false
+  }
+}
+```
+
+#### 🌐 Multiple Network Segment Monitoring
+```json
+{
+  "port": 162,
+  "bindAddress": "0.0.0.0",
+  "options": {
+    "allowedSources": "10.0.1.0/24,10.0.2.0/24,192.168.0.0/16",
+    "filterOid": "1.3.6.1.6.3.1.1.4",
+    "validateSource": true
   }
 }
 ```
@@ -212,13 +243,20 @@ docker run -d --name snmp-practice -p 161:161/udp polinux/snmpd
 ```
 oidyssey/
 ├── src/
-│   ├── nodes/Snmp/           # Main expedition headquarters
-│   ├── credentials/          # Your security vault
-│   ├── types/               # TypeScript navigation charts
-│   └── utils/               # Essential expedition tools
-├── test/                    # Equipment testing ground
-├── examples/                # Sample expedition routes
-└── docs/                   # Detailed maps and guides
+│   ├── nodes/
+│   │   ├── Snmp/                    # SNMP operations node
+│   │   └── SnmpTrapTrigger/        # SNMP trap trigger node
+│   ├── credentials/                 # SNMP credential definitions
+│   ├── types/                      # TypeScript type definitions
+│   ├── utils/
+│   │   ├── security/               # Input validation & rate limiting
+│   │   └── snmp/                   # SNMP helpers & caching
+│   └── snmp.svg                    # Shared icon for both nodes
+├── dist/                           # Compiled JavaScript output
+├── scripts/
+│   └── copy-assets.js             # Asset management for build
+├── test/                          # Test suite (in development)
+└── docs/                          # Documentation
 ```
 
 ## 🧪 Building and Development
@@ -276,7 +314,7 @@ Explores an entire OID territory from your starting point.
 
 ## 🚨 Expedition Troubleshooting
 
-### Common Navigation Issues
+### Common SNMP Node Issues
 
 #### ⏰ Connection Timeouts
 - Verify network path to target device
@@ -294,6 +332,25 @@ Explores an entire OID territory from your starting point.
 - SNMP service may be disabled or inactive
 - Firewall blocking SNMP traffic (UDP 161)
 - Incorrect community string or credentials
+
+### Common SNMP Trap Trigger Issues
+
+#### 🚫 No Traps Received
+- Verify devices are configured to send traps to n8n host
+- Check firewall allows UDP port 162 (or custom port)
+- Ensure trap source IPs match allowed sources (CIDR notation supported)
+- Verify community string matches device configuration
+
+#### ⚠️ Port Permission Errors
+- Port 162 requires root/admin privileges
+- Use a port > 1024 for non-privileged operation
+- Example: Use port 1162 instead of 162
+
+#### 🔍 Filtering Not Working
+- CIDR notation must be valid (e.g., `192.168.1.0/24`)
+- OID filters use prefix matching
+- Community string filters are case-sensitive
+- Multiple filters are AND conditions (all must match)
 
 ### 🔧 Debug Mode
 

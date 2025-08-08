@@ -124,3 +124,28 @@ coverage
 
 # Local development
 .env.local
+
+# n8n local sync output
+n8n_file_structure/
+
+# Claude Flow and AI development tools
+.claude-flow/
+.hive-mind/
+.claude/
+claude-flow-cache/
+
+# Local development databases
+*.db
+*.db-shm
+*.db-wal
+
+# Session and metrics data
+sessions/
+metrics/
+*-metrics.json
+
+# Temporary documentation
+UPDATES_SUMMARY.md
+CLEANUP_COMPLETE.md
+DEPLOYMENT_STATUS.md
+FILE_STRUCTURE.md
