@@ -47,6 +47,43 @@ describe('InputValidator', () => {
       expect(res.valid).toBe(false);
     });
   });
+
+  describe('validateTimeout', () => {
+    it('should accept a valid timeout', () => {
+      const res = InputValidator.validateTimeout(10000);
+      expect(res.valid).toBe(true);
+    });
+
+    it('should reject an invalid timeout', () => {
+      const res = InputValidator.validateTimeout(1000000);
+      expect(res.valid).toBe(false);
+    });
+  });
+
+  describe('validateRetries', () => {
+    it('should accept a valid number of retries', () => {
+      const res = InputValidator.validateRetries(3);
+      expect(res.valid).toBe(true);
+    });
+
+    it('should reject an invalid number of retries', () => {
+      const res = InputValidator.validateRetries(100);
+      expect(res.valid).toBe(false);
+    });
+  });
+
+  describe('validateMaxVarbinds', () => {
+    it('should accept a valid number of max varbinds', () => {
+      const res = InputValidator.validateMaxVarbinds(100);
+      expect(res.valid).toBe(true);
+    });
+
+    it('should reject an invalid number of max varbinds', () => {
+      const res = InputValidator.validateMaxVarbinds(10001);
+      expect(res.valid).toBe(false);
+    });
+  });
+
 });
 
 

@@ -149,3 +149,6 @@ UPDATES_SUMMARY.md
 CLEANUP_COMPLETE.md
 DEPLOYMENT_STATUS.md
 FILE_STRUCTURE.md
+
+# Generated API documentation
+docs/api
