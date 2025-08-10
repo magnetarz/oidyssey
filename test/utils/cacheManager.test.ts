@@ -11,6 +11,8 @@ describe('SnmpCacheManager', () => {
     cache.setCachedValue(host, oid, value, 200);
     const got = cache.getCachedValue(host, oid);
     expect(got).toBeTruthy();
+
+    cache.shutdown();
   });
 });
 

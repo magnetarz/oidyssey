@@ -1,0 +1,12 @@
+---
+description: AVOID these mistakes
+globs:
+alwaysApply: false
+---
+- Don't hardcode session limits
+- Don't leave sessions open after errors
+- Don't log sensitive credentials
+- Don't assume OID format (validate first)
+- Don't ignore SNMP version differences
+- Don't block on synchronous operations
+- Don't exceed rate limits for device polling

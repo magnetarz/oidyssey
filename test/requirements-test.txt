@@ -1,0 +1,19 @@
+# Python dependencies for SNMP testing
+pysnmp==4.4.12
+pysnmp-mibs==0.1.6
+pyasn1==0.5.0
+pysmi==0.3.4
+
+# Additional testing utilities
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-timeout==2.2.0
+
+# Logging and monitoring
+colorama==0.4.6
+python-json-logger==2.0.7
+
+# Network utilities
+scapy==2.5.0
+netaddr==0.9.0

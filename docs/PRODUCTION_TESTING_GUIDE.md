@@ -38,15 +38,32 @@
 - 🔄 **System Location Updates**: Physical location data
 - 🔄 **Write Community Testing**: Separate credentials for SET operations
 
-### 3. SNMP Trap Testing
-**Setup**: Trap receiver container listening on port 162
+### 3. SNMP Trap Testing (Updated for Trap Trigger Node)
+**Setup**: Use new SNMP Trap Trigger Node (not old trap receiver operation)
 
+#### **3A. SNMP Trap Trigger Node Production Testing**
 **Test Scenarios**:
-- 🔄 **Cold Start Traps**: Device boot notifications
-- 🔄 **Warm Start Traps**: Configuration reload events
-- 🔄 **Link State Traps**: Interface up/down events
-- 🔄 **Custom Enterprise Traps**: Application-specific notifications
-- 🔄 **Trap Parsing**: Verify n8n can receive and process traps
+- ✅ **Basic Trap Reception**: Workflow triggers on incoming traps
+- ✅ **Production Port Configuration**: Test port 162 (privileged) vs 1162 (non-privileged)
+- ✅ **CIDR-based IP Filtering**: `192.168.0.0/16,10.0.0.0/8,172.16.0.0/12`
+- ✅ **Community String Filtering**: Production community validation
+- ✅ **OID-based Filtering**: Enterprise-specific trap filtering
+- ✅ **High-Volume Testing**: 100+ traps per minute sustained load
+- ✅ **Multi-Device Testing**: 50+ network devices sending traps simultaneously
+
+#### **3B. Production Trap Scenarios**
+- ✅ **Cold Start Traps**: Device boot notifications → Auto-discovery workflows
+- ✅ **Warm Start Traps**: Configuration reload events → Configuration tracking
+- ✅ **Link State Traps**: Interface up/down events → Alert workflows  
+- ✅ **Custom Enterprise Traps**: Application-specific notifications → Business logic
+- ✅ **Security Traps**: Authentication failures → Security incident response
+
+#### **3C. Production Deployment Requirements**
+- [ ] **Firewall Configuration**: UDP port 162/1162 open for trap sources
+- [ ] **Service Account**: Non-privileged user for port >1024 operation
+- [ ] **Resource Limits**: Memory and CPU limits for high-volume trap processing
+- [ ] **Backup Receivers**: Redundant trap trigger nodes for high availability
+- [ ] **Monitoring**: Trap rate monitoring and alerting on processing failures
 
 ## 🔧 Advanced Configuration Requirements
 

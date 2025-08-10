@@ -55,14 +55,43 @@
 
 ### 3. 🚨 SNMP Trap Testing
 
-#### Trap Scenarios
-| Trap Type | OID | Trigger | Expected Data | Status |
-|-----------|-----|---------|---------------|--------|
-| Cold Start | `1.3.6.1.6.3.1.1.5.1` | Agent restart | System info | ⏳ |
-| Warm Start | `1.3.6.1.6.3.1.1.5.2` | Config reload | Timestamp | ⏳ |
-| Link Down | `1.3.6.1.6.3.1.1.5.3` | Interface down | Interface index | ⏳ |
-| Link Up | `1.3.6.1.6.3.1.1.5.4` | Interface up | Interface index | ⏳ |
-| Enterprise Trap | Custom OID | Custom trigger | Custom data | ⏳ |
+#### A. SNMP Trap Trigger Node Testing
+**Setup**: Use the new SNMP Trap Trigger Node (not the old trap receiver operation)
+
+| Test Case | Configuration | Expected Result | Status |
+|-----------|---------------|----------------|--------|
+| Basic Trap Reception | Port 1162, no filters | Workflow triggers on any trap | ⏳ |
+| IP Filtering | CIDR: `127.0.0.1,192.168.1.0/24` | Only allowed IPs trigger | ⏳ |
+| Community Filtering | Filter: `test-community` | Only matching community triggers | ⏳ |
+| OID Filtering | Filter: `1.3.6.1.4.1.2021` | Only matching OID prefix triggers | ⏳ |
+| Port Permissions | Port 162 vs 1162 | Test privileged vs non-privileged | ⏳ |
+| Multiple Sources | 5+ devices sending simultaneously | All traps processed correctly | ⏳ |
+
+#### B. Trap Trigger vs Traditional Trap Operation
+| Aspect | Trap Trigger Node | Old Trap Receiver Operation |
+|--------|-------------------|---------------------------|
+| Workflow Integration | ✅ Continuous trigger | ❌ One-time operation |
+| Real-time Processing | ✅ Immediate | ❌ Polling-based |
+| Performance | ✅ Event-driven | ❌ Resource intensive |
+| Ease of Use | ✅ Webhook-like | ❌ Complex setup |
+
+#### C. Trap Scenario Testing (Using Python trap-sender.py)
+| Trap Type | Command | Expected Data | Status |
+|-----------|---------|---------------|--------|
+| Basic Trap | `python trap-sender.py --test basic` | Generic trap data | ⏳ |
+| Server Alert | `python trap-sender.py --test server` | CPU usage data | ⏳ |
+| Interface Down | `python trap-sender.py --test interface` | Interface index | ⏳ |
+| Custom Enterprise | `python trap-sender.py --test custom` | Custom OID data | ⏳ |
+| Burst Testing | `python trap-sender.py --test burst --count 10` | 10 traps processed | ⏳ |
+
+#### D. Trap Data Validation
+| Field | Expected Format | Validation | Status |
+|-------|----------------|------------|--------|
+| timestamp | ISO 8601 string | Valid datetime | ⏳ |
+| source.address | IP address | Valid IP format | ⏳ |
+| trap.version | "v1" or "v2c" | Correct version | ⏳ |
+| varbinds | Array of objects | OID/type/value structure | ⏳ |
+| summary | Metadata object | Count and basic info | ⏳ |
 
 ### 4. 🔒 Security Testing
 

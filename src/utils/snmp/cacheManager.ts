@@ -442,6 +442,11 @@ export class SnmpCacheManager {
         this.cleanupInterval = setInterval(() => {
             this.cleanup();
         }, 5 * 60 * 1000);
+        // Prevent this interval from keeping the Node process alive in tests
+        const timer = this.cleanupInterval as NodeJS.Timeout & { unref?: () => void };
+        if (typeof timer.unref === 'function') {
+            timer.unref();
+        }
     }
 
     /**

@@ -1,0 +1,256 @@
+{
+  "name": "My workflow 6",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ae11bbae-dec3-461c-be65-44c27e638089",
+      "name": "Analyze Trap Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        528,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "f0bafff3-c581-4d4f-b033-199c0293d083",
+      "name": "Merge Trap & Processing Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "SNMP Trap Alert - {{ $('Process Trap Data').item.json.source_address }}",
+        "options": {}
+      },
+      "id": "cede66d0-de9d-4bc9-835a-5901f2ea3815",
+      "name": "Log Trap Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        0
+      ],
+      "webhookId": "aef97bde-ad0c-4372-a923-225b24e671d1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "high-cpu-alert",
+              "leftValue": "={{ $json.trap_type }}",
+              "rightValue": "v2c",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "29083a63-95ab-47e7-8b0e-f2a077932cb3",
+      "name": "Check Trap Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        16,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "10503fb5-385f-4b6e-b060-372f65cffe31",
+      "name": "Process Trap Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        -192,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "CUSTOM.snmpTrapTrigger",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        192
+      ],
+      "id": "df559bc2-5523-47e3-9fec-d3c449d9b1c8",
+      "name": "SNMP Trap Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        736,
+        368
+      ],
+      "id": "2528cb89-484c-451f-9078-4e07f0307e1a",
+      "name": "Insert or update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "hfpmPt1dB9B5YE18",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "channelMessage",
+        "teamId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        304,
+        176
+      ],
+      "id": "7d913af9-3a37-44bb-ba09-368213b9784b",
+      "name": "Create message",
+      "webhookId": "013b63df-2702-497a-8b1b-c701cc362657"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge Trap & Processing Data": {
+      "main": [
+        [
+          {
+            "node": "Analyze Trap Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Trap Type": {
+      "main": [
+        [
+          {
+            "node": "Merge Trap & Processing Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Trap Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge Trap & Processing Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Process Trap Data": {
+      "main": [
+        [
+          {
+            "node": "Check Trap Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SNMP Trap Trigger": {
+      "main": [
+        [
+          {
+            "node": "Process Trap Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Trap Content": {
+      "main": [
+        [
+          {
+            "node": "Insert or update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c199249c-f1d5-4ecd-b2b9-b213cae62524",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "edd9f46a6334bf1bad1db9d42823b0ff6f0eea625a7b61b13e294f816f675f54"
+  },
+  "id": "YtUGhD8R2tf0QLUO",
+  "tags": []
+}

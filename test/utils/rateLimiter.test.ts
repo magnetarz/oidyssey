@@ -8,6 +8,8 @@ describe('SnmpRateLimiter', () => {
     expect(rl.checkRateLimit(host).allowed).toBe(true);
     const third = rl.checkRateLimit(host);
     expect(third.allowed).toBe(false);
+
+    rl.shutdown();
   });
 });
 

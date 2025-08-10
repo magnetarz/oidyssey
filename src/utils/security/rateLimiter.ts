@@ -8,6 +8,7 @@ import { RateLimitConfig, RateLimitEntry } from '../../types/SessionTypes';
 export class SnmpRateLimiter {
     private deviceLimits: Map<string, RateLimitEntry> = new Map();
     private readonly config: RateLimitConfig;
+    private cleanupTimer?: NodeJS.Timeout;
 
     constructor(config: Partial<RateLimitConfig> = {}) {
         this.config = {
@@ -18,7 +19,11 @@ export class SnmpRateLimiter {
         };
 
         // Cleanup old entries periodically
-        setInterval(() => this.cleanup(), this.config.windowSizeMs);
+        this.cleanupTimer = setInterval(() => this.cleanup(), this.config.windowSizeMs);
+        const timer = this.cleanupTimer as NodeJS.Timeout & { unref?: () => void };
+        if (typeof timer.unref === 'function') {
+            timer.unref();
+        }
     }
 
     /**
@@ -235,7 +240,13 @@ export class SnmpRateLimiter {
     public setEnabled(enabled: boolean): void {
         this.config.enableRateLimiting = enabled;
         if (!enabled) {
-            this.resetAllRateLimits();
+            this.shutdown();
+        } else if (!this.cleanupTimer) {
+            this.cleanupTimer = setInterval(() => this.cleanup(), this.config.windowSizeMs);
+            const timer = this.cleanupTimer as NodeJS.Timeout & { unref?: () => void };
+            if (typeof timer.unref === 'function') {
+                timer.unref();
+            }
         }
     }
 
@@ -265,5 +276,16 @@ export class SnmpRateLimiter {
             entries,
             exportTime: now
         };
+    }
+
+    /**
+     * Gracefully shutdown the rate limiter by clearing timers and state
+     */
+    public shutdown(): void {
+        if (this.cleanupTimer) {
+            clearInterval(this.cleanupTimer);
+            this.cleanupTimer = undefined;
+        }
+        this.resetAllRateLimits();
     }
 }
