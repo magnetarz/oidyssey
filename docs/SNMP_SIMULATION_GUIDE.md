@@ -1,8 +1,8 @@
 # SNMP Simulation Guide for OIDyssey Testing
 
-## 📁 Created Simulation Files
+## 📁 Simulation Files
 
-I've created three `.snmprec` files in the `test/` directory:
+Example `.snmprec` files (create under your `test/` directory if needed):
 
 1. **linux-server.snmprec** - Linux server with Net-SNMP data
 2. **network-switch.snmprec** - Cisco switch with interface data

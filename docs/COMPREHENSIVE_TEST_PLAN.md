@@ -57,14 +57,15 @@
 
 #### A. SNMP Trap Trigger Node Testing
 **Setup**: Use the new SNMP Trap Trigger Node (not the old trap receiver operation)
+> Automated coverage: See `test/integration/TrapTrigger.integration.test.ts` and `test/nodes/SnmpTrapTrigger.node.test.ts` for end-to-end and unit tests.
 
 | Test Case | Configuration | Expected Result | Status |
 |-----------|---------------|----------------|--------|
-| Basic Trap Reception | Port 1162, no filters | Workflow triggers on any trap | ⏳ |
-| IP Filtering | CIDR: `127.0.0.1,192.168.1.0/24` | Only allowed IPs trigger | ⏳ |
+| Basic Trap Reception | Port 1162, no filters | Listener emits on any trap | ✅ (Automated) |
+| IP Filtering | CIDR/IP rules | Only allowed IPs trigger | ✅ (Automated) |
 | Community Filtering | Filter: `test-community` | Only matching community triggers | ⏳ |
 | OID Filtering | Filter: `1.3.6.1.4.1.2021` | Only matching OID prefix triggers | ⏳ |
-| Port Permissions | Port 162 vs 1162 | Test privileged vs non-privileged | ⏳ |
+| Port Permissions | Port 162 vs 1162 | Privileged vs non-privileged | ⏳ |
 | Multiple Sources | 5+ devices sending simultaneously | All traps processed correctly | ⏳ |
 
 #### B. Trap Trigger vs Traditional Trap Operation

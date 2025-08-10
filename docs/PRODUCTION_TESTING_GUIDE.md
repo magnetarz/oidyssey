@@ -19,7 +19,7 @@
 ## 🧪 Advanced Testing Scenarios
 
 ### 1. Comprehensive Functionality Test
-**File**: `SNMP-Comprehensive-Test-Suite.json`
+**Reference**: See `docs/COMPREHENSIVE_TEST_PLAN.md` and automated tests under `test/`.
 
 **Tests Include**:
 - ✅ **Multiple GET Operations**: System Description, Uptime, Name
@@ -29,7 +29,7 @@
 - ✅ **Parallel Execution**: Multiple operations simultaneously
 
 ### 2. SET Operations Test
-**File**: `SNMP-SET-Operations-Test.json`
+**Reference**: Prepare a write-enabled SNMP target and use n8n workflows or CLI tools.
 
 **Tests Include**:
 - 🔄 **Read-Modify-Verify Pattern**: Before/After validation

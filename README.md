@@ -281,7 +281,7 @@ npm run lint
 npm run format
 ```
 
-> Note: A formal test suite is in progress. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for details.
+> Note: A comprehensive automated test suite (unit + integration) is available. See [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) for current status and coverage.
 
 ## 📚 Expedition Guide (API Reference)
 
@@ -398,3 +398,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **🗺️ Begin Your OIDyssey Today - Every Network Has Stories to Tell! 🚀**
 
 *Made with ❤️ for network explorers and the n8n community*
+
+## 📖 Documentation Index
+
+- Implementation status and coverage: [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)
+- Comprehensive test plan: [docs/COMPREHENSIVE_TEST_PLAN.md](docs/COMPREHENSIVE_TEST_PLAN.md)
+- Trap trigger testing: [docs/TRAP_TRIGGER_TESTING.md](docs/TRAP_TRIGGER_TESTING.md)
+- Trap trigger summary: [docs/TRAP_TRIGGER_SUMMARY.md](docs/TRAP_TRIGGER_SUMMARY.md)
+- SNMP simulation guide: [docs/SNMP_SIMULATION_GUIDE.md](docs/SNMP_SIMULATION_GUIDE.md)
+- Production testing guide: [docs/PRODUCTION_TESTING_GUIDE.md](docs/PRODUCTION_TESTING_GUIDE.md)

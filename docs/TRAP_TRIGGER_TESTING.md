@@ -3,21 +3,22 @@
 ## 🎯 Overview
 This guide provides comprehensive testing for the OIDyssey SNMP Trap Trigger node using both manual scripts and automated test workflows.
 
-## 📁 Test Files Created
+## 📁 Test Assets
 
-1. **`trap-sender.py`** - Python script to send various SNMP traps
-2. **`trap-trigger-test-workflow.json`** - n8n workflow for testing trap reception
-3. **This testing guide**
+- **`test/snmp-traps/trap-sender.py`** - Python script to send various SNMP traps
+- **Automated tests**
+  - `test/nodes/SnmpTrapTrigger.node.test.ts`
+  - `test/integration/TrapTrigger.integration.test.ts`
 
 ## 🚀 Quick Start Testing
 
-### Step 1: Set up n8n Workflow
-1. Open n8n UI at http://localhost:5678
-2. Import the test workflow: `test/trap-trigger-test-workflow.json`
-3. Activate the workflow
-4. The SNMP Trap Trigger will listen on port 1162
+### Step 1: Run automated tests
+```bash
+npm test
+```
+This will run both unit and integration tests, including the Trap Trigger.
 
-### Step 2: Send Test Traps
+### Step 2 (optional): Send Test Traps manually
 ```bash
 # From your oidyssey directory
 cd test
