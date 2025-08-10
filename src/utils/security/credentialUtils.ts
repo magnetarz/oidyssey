@@ -109,8 +109,8 @@ export class CredentialUtils {
         }
 
         // Length validation
-        if (community.length < 1) {
-            errors.push('Community string cannot be empty');
+        if (community.length < 4) {
+            errors.push('Community string must be at least 4 characters long');
         } else if (community.length > 32) {
             errors.push('Community string cannot exceed 32 characters');
         }

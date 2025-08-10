@@ -38,7 +38,8 @@
     "test:watch": "jest --watch",
     "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts'",
     "clean": "rimraf dist",
-    "prepublishOnly": "npm run clean && npm run build && npm run test"
+    "prepublishOnly": "npm run clean && npm run build && npm run test",
+    "docs": "typedoc --entryPointStrategy expand --out docs/api src"
   },
   "dependencies": {
     "net-snmp": "^3.8.2"
@@ -54,7 +55,9 @@
     "prettier": "^3.0.0",
     "rimraf": "^5.0.0",
     "ts-jest": "^29.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "typedoc": "^0.24.8",
+    "typedoc-plugin-markdown": "^3.17.1"
   },
   "jest": {
     "preset": "ts-jest",
@@ -84,10 +87,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/oidyssey.git"
+    "url": "https://github.com/magnetarz/oidyssey.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/oidyssey/issues"
+    "url": "https://github.com/magnetarz/oidyssey/issues"
   },
-  "homepage": "https://github.com/yourusername/oidyssey#readme"
+  "homepage": "https://github.com/magnetarz/oidyssey#readme"
 }

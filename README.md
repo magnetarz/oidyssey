@@ -26,6 +26,12 @@ OIDyssey provides **two specialized nodes** for complete SNMP functionality:
 - **📝 TypeScript**: Fully typed with comprehensive type definitions for better development experience
 - **🎨 Modern UI**: SVG icons for crisp display at any resolution
 
+## 🚧 Current Status: Beta 🚧
+
+**OIDyssey is currently in a beta state.** While the core functionality is implemented and the project is stable, it has not yet undergone the full testing regimen outlined in our `PRODUCTION_TESTING_GUIDE.md`. We are actively working on increasing test coverage and ensuring the project is robust enough for production use.
+
+We welcome feedback and contributions to help us reach a stable v1.0 release!
+
 ## 🎯 Installation
 
 ### As a Custom Node (Current Method)
